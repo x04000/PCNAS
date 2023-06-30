@@ -1,7 +1,7 @@
 from tkinter import *
 from threading import Thread, Event
 import tkinter 
-import os
+import sys
 import http.server, socketserver
 
 # Colors
@@ -16,19 +16,15 @@ white = "\x1b[0;37m"
 
 Handler = http.server.SimpleHTTPRequestHandler
 
-def init_server(path, port, event: Event):
+def init_server(path, port):
     with socketserver.TCPServer((path, int(port)), Handler) as httpd:
         print("Servidor HTTP en el puerto", port)
-        t3 = Thread(target=httpd.serve_forever)
-        t3.start()
-        while not event.is_set():
-            pass
-        exit()
+        httpd.serve_forever()
+        
 
 print(blue+"Starting PC-NAS 1.0")
 
 def on_error(error_type):
-    print("oh no")
     error = tkinter.Tk()
     error.title("PC-NAS error")
     error.geometry("250x80")
@@ -56,18 +52,14 @@ portinput = tkinter.Entry(ui, width=30, fg="white", bg="black")
 portinput.insert(0, "8000")
 portinput.pack(fill=tkinter.X)
 
-event = Event()
 path = pathinput.get()
 port = portinput.get()
-t2 = Thread(target=init_server, args=(path, port, event,))
+t2 = Thread(target=init_server, args=(path, port,))
+t2.daemon = True
 
 def exit_app():
-    global on_exit
     ui.destroy()
-    event.set()
-    t2.join()
-    print("Yeah, the following error is supposed to happen")
-    exit()
+    sys.exit()
 
 tkinter.Button(ui, text = "Start Server", command = t2.start, fg="white", bg="black").pack(fill = tkinter.X)
 exit_button = tkinter.Button(ui, text="Exit server", command=exit_app, fg="white", bg="black")
